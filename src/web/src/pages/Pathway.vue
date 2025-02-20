@@ -13,7 +13,7 @@
     </div>
     <div v-if="categories.length > 0" class="mx-auto w-75">
       <!-- pop-up window -->
-      <b-modal ref="my-modal">
+      <b-modal ref="my-modal" hide-footer>
         <div class="block text-left" v-if="showPath != null" md="10">
           <h3
             class="text-center"
@@ -23,18 +23,20 @@
           </h3>
           <br />
           <div v-for="(item, itemName) in showPath" :key="itemName">
-            <h4 style="color: #3395ff; margin-top: -20px;">
-              {{ itemName + ": " }}
-            </h4>
-            <li
-              v-for="course in item"
-              :key="course"
-              v-on:click="goPage(course)"
-              class="courseInPath"
-            >
-              {{ course }}
-            </li>
-            <br />
+            <template v-if="itemName !== 'Name'">
+              <h4 style="color: #3395ff; margin-top: -20px;">
+                {{ itemName }}:
+              </h4>
+              <li
+                v-for="course in item"
+                :key="course"
+                @click="goPage(course)"
+                class="courseInPath"
+              >
+                {{ course }}
+              </li>
+              <br />
+            </template>
           </div>
         </div>
       </b-modal>
@@ -365,5 +367,15 @@ export default {
     margin-bottom: 20px;
     gap: 5px;
   }
+}
+
+.modal-content {
+  min-height: 100%;
+  border-radius: 15px;
+}
+
+.modal-header {
+  border-bottom: none;
+  padding-bottom: 0;
 }
 </style>
