@@ -103,6 +103,22 @@ export default {
       if (this.courseObj) {
         this.courseObj.selected = true;
         
+        this.courseObj.sections.forEach(section => {
+          section.selected = true;
+          if (this.$store.state.user && this.$store.state.user.isLoggedIn) {
+            this.$store.dispatch('addStudentCourse', {
+              name: this.courseObj.name,
+              semester: this.$store.state.selectedSemester,
+              cid: section.crn
+            });
+          } else {
+            SelectedCoursesCookie.load(this.$cookies)
+              .semester(this.$store.state.selectedSemester)
+              .addCourseSection(this.courseObj, section)
+              .save();
+          }
+        });
+
         if (this.$store.state.user && this.$store.state.user.isLoggedIn) {
           this.$store.dispatch('addStudentCourse', {
             name: this.courseObj.name,
