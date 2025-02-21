@@ -28,7 +28,14 @@
           {{ courseObj.description }}
         </b-col>
       </b-row>
-      <b-button @click="$router.go(-1)">Back</b-button>
+      <b-row class="mb-3">
+        <b-col>
+          <b-button variant="primary" class="mr-2" @click="addToSchedule">
+            Add to Schedule
+          </b-button>
+          <b-button @click="$router.go(-1)">Back</b-button>
+        </b-col>
+      </b-row>
       <!--      :to="'/explore/' + courseObj.department"-->
     </div>
     <CenterSpinner
@@ -60,6 +67,7 @@ import { COURSES } from "@/store";
 import { generateRequirementsText } from "@/utils";
 import CenterSpinnerComponent from "../components/CenterSpinner.vue";
 import CourseSectionsOpenBadge from "../components/CourseSectionsOpenBadge.vue";
+import { SelectedCoursesCookie } from "../controllers/SelectedCoursesCookie";
 
 export default {
   components: {
@@ -91,6 +99,30 @@ export default {
   },
   methods: {
     generateRequirementsText,
+    addToSchedule() {
+      if (this.courseObj) {
+        this.courseObj.selected = true;
+        
+        if (this.$store.state.user && this.$store.state.user.isLoggedIn) {
+          this.$store.dispatch('addStudentCourse', {
+            name: this.courseObj.name,
+            semester: this.$store.state.selectedSemester,
+            cid: "-1"
+          });
+        } else {
+          SelectedCoursesCookie.load(this.$cookies)
+            .semester(this.$store.state.selectedSemester)
+            .addCourse(this.courseObj)
+            .save();
+        }
+
+        this.$bvToast.toast(`Added ${this.courseObj.name} to schedule`, {
+          title: 'Course Added',
+          variant: 'success',
+          solid: true
+        });
+      }
+    }
   },
   computed: {
     ...mapState(["isLoadingCourses"]),
