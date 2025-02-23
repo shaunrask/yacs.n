@@ -68,6 +68,7 @@ import { generateRequirementsText } from "@/utils";
 import CenterSpinnerComponent from "../components/CenterSpinner.vue";
 import CourseSectionsOpenBadge from "../components/CourseSectionsOpenBadge.vue";
 import { SelectedCoursesCookie } from "../controllers/SelectedCoursesCookie";
+import { addStudentCourse } from "@/services/YacsService";
 
 export default {
   components: {
@@ -99,37 +100,44 @@ export default {
   },
   methods: {
     generateRequirementsText,
-    addToSchedule() {
+    async addToSchedule() {
       if (this.courseObj) {
-        this.courseObj.selected = true;
-        
-        this.courseObj.sections.forEach(section => {
-          section.selected = true;
-          if (this.$store.state.user && this.$store.state.user.isLoggedIn) {
-            this.$store.dispatch('addStudentCourse', {
+        if (this.isLoggedIn) {
+          try {
+            await addStudentCourse({
               name: this.courseObj.name,
-              semester: this.$store.state.selectedSemester,
-              cid: section.crn
+              semester: this.selectedSemester,
+              cid: "-1"
             });
-          } else {
-            SelectedCoursesCookie.load(this.$cookies)
-              .semester(this.$store.state.selectedSemester)
-              .addCourseSection(this.courseObj, section)
-              .save();
-          }
-        });
 
-        if (this.$store.state.user && this.$store.state.user.isLoggedIn) {
-          this.$store.dispatch('addStudentCourse', {
-            name: this.courseObj.name,
-            semester: this.$store.state.selectedSemester,
-            cid: "-1"
-          });
+            for (const section of this.courseObj.sections) {
+              await addStudentCourse({
+                name: this.courseObj.name,
+                semester: this.selectedSemester,
+                cid: section.crn
+              });
+            }
+          } catch (error) {
+            this.$bvToast.toast('Failed to add course to schedule', {
+              title: 'Error',
+              variant: 'danger',
+              solid: true
+            });
+            return;
+          }
         } else {
-          SelectedCoursesCookie.load(this.$cookies)
-            .semester(this.$store.state.selectedSemester)
-            .addCourse(this.courseObj)
-            .save();
+          this.courseObj.selected = true;
+          
+          const cookieManager = SelectedCoursesCookie.load(this.$cookies)
+            .semester(this.selectedSemester);
+          
+          cookieManager.addCourse(this.courseObj);
+          this.courseObj.sections.forEach(section => {
+            section.selected = true;
+            cookieManager.addCourseSection(this.courseObj, section);
+          });
+          
+          cookieManager.save();
         }
 
         this.$bvToast.toast(`Added ${this.courseObj.name} to schedule`, {
@@ -141,6 +149,8 @@ export default {
     }
   },
   computed: {
+    ...mapState(['selectedSemester', 'selectedCourses']),
+    ...mapGetters({ isLoggedIn: 'user/isLoggedIn' }),
     ...mapState(["isLoadingCourses"]),
     ...mapGetters([COURSES]),
     transformed() {
