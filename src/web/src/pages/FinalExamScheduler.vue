@@ -4,7 +4,7 @@
     <b-row class="justify-content-md-center">
       <b-col md="5">
         <b-card title="Final Exam Schedule">
-          <b-form @submit.prevent="searchExams">
+          <b-form @submit.prevent="handleSearch">
             <div
               v-for="(course, index) in selectedCourses"
               :key="index"
@@ -26,7 +26,12 @@
               </b-form-group>
             </div>
             <b-button @click="addCourse" variant="primary">Add Course</b-button>
-            <b-button type="submit" variant="success" class="ml-3">
+            <b-button 
+              type="submit" 
+              variant="success" 
+              class="ml-3"
+              :disabled="!isValidForSearch"
+            >
               Search
             </b-button>
           </b-form>
@@ -95,6 +100,12 @@ export default {
   mounted() {
     this.initCourseOptions();
   },
+  computed: {
+    isValidForSearch() {
+      return this.selectedCourses.length > 0 && 
+             this.selectedCourses.every(course => course !== null);
+    }
+  },
   methods: {
     formatExamDateTime(day, time) {
       const [start, end] = time.split("-");
@@ -149,6 +160,15 @@ export default {
         this.selectedCourses.push(null);
       }
       this.examDetails = [];
+    },
+    handleSearch() {
+      // Remove any null courses before searching
+      this.selectedCourses = this.selectedCourses.filter(course => course !== null);
+      
+      // Only search if we have valid courses
+      if (this.selectedCourses.length > 0) {
+        this.searchExams();
+      }
     },
     searchExams() {
       const examDetailsRaw = this.selectedCourses.flatMap((course) => {
