@@ -10,11 +10,19 @@
               :key="index"
               class="mb-3"
             >
-              <b-form-group :label="'Course ' + (index + 1)">
-                <b-form-select
-                  v-model="selectedCourses[index]"
-                  :options="courseOptions"
-                ></b-form-select>
+              <b-form-group :label="'Course ' + (index + 1)" class="d-flex align-items-center">
+                <div class="select-container">
+                  <b-form-select
+                    v-model="selectedCourses[index]"
+                    :options="courseOptions"
+                  ></b-form-select>
+                  <span 
+                    class="delete-x"
+                    @click="removeCourse(index)"
+                  >
+                    ×
+                  </span>
+                </div>
               </b-form-group>
             </div>
             <b-button @click="addCourse" variant="primary">Add Course</b-button>
@@ -135,6 +143,13 @@ export default {
     addCourse() {
       this.selectedCourses.push(null);
     },
+    removeCourse(index) {
+      this.selectedCourses.splice(index, 1);
+      if (this.selectedCourses.length === 0) {
+        this.selectedCourses.push(null);
+      }
+      this.examDetails = [];
+    },
     searchExams() {
       const examDetailsRaw = this.selectedCourses.flatMap((course) => {
         return this.exams
@@ -224,5 +239,25 @@ export default {
 .calendar-table td {
   width: 20%;
   position: relative;
+}
+
+.select-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.delete-x {
+  cursor: pointer;
+  color: #6c757d;
+  font-size: 20px;
+  font-weight: bold;
+  padding: 0 5px;
+  margin-left: 10px;
+}
+
+.delete-x:hover {
+  color: #495057;
 }
 </style>
