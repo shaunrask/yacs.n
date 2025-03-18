@@ -216,21 +216,23 @@ class ClassInfo:
         """, None, True)
 
     def get_semesters(self, includeHidden=False):
-      if includeHidden:
-        return self.db_conn.execute("""
-            select
-              semester
-            from
-              semester_info
-        """, None, True)
-      return self.db_conn.execute("""
-          select
-            semester
-          from
-            semester_info
-          where
-            public = true::boolean
-      """, None, True)
+        base_query = """
+            SELECT semester
+            FROM semester_info
+            {where_clause}
+            ORDER BY 
+                SUBSTRING(semester FROM '\d+')::int DESC,
+                CASE 
+                    WHEN semester LIKE '%Spring%' THEN 1
+                    WHEN semester LIKE '%Summer%' THEN 2
+                    WHEN semester LIKE '%Fall%' THEN 3
+                    ELSE 4
+                END,
+                semester
+        """
+        
+        where_clause = "" if includeHidden else "WHERE public = true::boolean"
+        return self.db_conn.execute(base_query.format(where_clause=where_clause), None, True)
 
     def get_all_semester_info(self):
       return self.db_conn.execute("""
