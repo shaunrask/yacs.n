@@ -33,9 +33,22 @@
           value-field="display_string"
         ></b-form-select>
         <div id="allScheduleData" class="justify-content-right">
-          <!-- Made two seperate schedule navigators which turn on and off depending on mobile view -->
           <div>
-            <!-- Desktop view - Display Message between the two change schedule buttons -->
+            <!-- Single preset button above schedule -->
+            <b-row class="mb-3">
+              <b-col>
+                <b-button 
+                  @click="showPresetModal = true" 
+                  variant="secondary" 
+                  size="sm"
+                >
+                  <font-awesome-icon icon="save" class="mr-1" />
+                  View Saved Presets
+                </b-button>
+              </b-col>
+            </b-row>
+
+            <!-- Desktop view navigation -->
             <b-row class="justify-content-between align-items-center desktop-schedule-navigation">
               <b-col cols="auto" class="schedule-navigation">
                 <b-button
@@ -73,10 +86,21 @@
               </b-col>
             </b-row>
 
-            <!-- Mobile view  - Display Message First then change schedule buttons -->
+            <!-- Mobile view - Add preset button here too -->
             <b-row
               class="d-flex flex-column align-items-center text-center mobile-schedule-navigation"
             >
+              <b-col cols="12" class="mb-2">
+                <b-button 
+                  @click="showPresetModal = true" 
+                  variant="secondary" 
+                  class="mr-2"
+                  size="sm"
+                >
+                  <font-awesome-icon icon="save" class="mr-1" />
+                  View Saved Presets
+                </b-button>
+              </b-col>
               <b-col cols="12" class="pt-2">
                 <span v-if="scheduleDisplayMessage === 2">
                   Add some sections to generate schedules!
@@ -285,6 +309,40 @@
         Close
       </b-button>
     </b-modal>
+      <!-- Add a button to open the preset modal (e.g., in your header or sidebar) -->
+  <b-button @click="showPresetModal = true" variant="secondary" class="mb-3">
+    View Saved Presets
+  </b-button>
+
+    <!-- Preset Modal -->
+    <b-modal v-model="showPresetModal" title="Saved Presets">
+      <div>
+        <ul>
+          <li v-for="(preset, idx) in presets" :key="idx" class="mb-2">
+            <span>{{ preset.name }}</span>
+            <b-button size="sm" @click="loadPreset(preset)" class="ml-2">
+              Load
+            </b-button>
+            <b-button size="sm" variant="danger" @click="deletePreset(idx)" class="ml-1">
+              Delete
+            </b-button>
+          </li>
+        </ul>
+        <hr />
+        <b-form @submit.prevent="handleSavePreset">
+          <b-form-group label="New Preset Name:" label-for="new-preset-input">
+            <b-form-input
+              id="new-preset-input"
+              v-model="newPresetName"
+              required
+            ></b-form-input>
+          </b-form-group>
+          <b-button type="submit" variant="primary">
+            Save Current Preset
+          </b-button>
+        </b-form>
+      </div>
+    </b-modal>
   </b-container>
 </template>
 
@@ -356,6 +414,9 @@ export default {
 
       courseInfoModalCourse: null,
       showCourseInfoModal: false,
+      showPresetModal: false,
+      newPresetName: '',
+      presets: [],
       possibilities: [
         {
           sections: [],
@@ -670,7 +731,59 @@ export default {
         .updateIndex(this.index)
         .save();
     },
+
+    
+    savePreset(presetName) {
+    const preset = {
+      name: presetName,
+      dateSaved: new Date().toISOString(),
+      state: {
+        selectedCourses: this.selectedCourses,
+        possibilities: this.possibilities,
+        index: this.index,
+        // include any additional state you want to save
+      },
+    };
+
+    let savedPresets = JSON.parse(localStorage.getItem('savedPresets')) || [];
+    savedPresets.push(preset);
+    localStorage.setItem('savedPresets', JSON.stringify(savedPresets));
+    this.$toast && this.$toast('Preset saved!'); // optional notification
   },
+
+  getPresets() {
+    return JSON.parse(localStorage.getItem('savedPresets')) || [];
+  },
+
+  loadPreset(preset) {
+    // Restore the preset state (adjust as needed)
+    this.selectedCourses = preset.state.selectedCourses;
+    this.possibilities = preset.state.possibilities;
+    this.index = preset.state.index;
+    // Optionally, trigger watchers or computed property updates if needed.
+    this.showPresetModal = false;
+  },
+
+  handleSavePreset() {
+    if (this.newPresetName.trim()) {
+      this.savePreset(this.newPresetName);
+      this.newPresetName = '';
+      this.fetchPresets();
+    }
+  },
+
+  fetchPresets() {
+    this.presets = this.getPresets();
+  },
+
+  deletePreset(index) {
+    let savedPresets = this.getPresets();
+    savedPresets.splice(index, 1);
+    localStorage.setItem('savedPresets', JSON.stringify(savedPresets));
+    this.fetchPresets();
+  },
+  },
+  
   computed: {
     ...mapState(["subsemesters", "selectedSemester"]),
     ...mapGetters([COURSES]),
@@ -746,6 +859,10 @@ export default {
       },
     },
   },
+
+  mounted() {
+  this.fetchPresets();
+}
 };
 </script>
 
@@ -958,6 +1075,20 @@ button:focus {
   background-color: #32aad8;
 }
 
+.desktop-schedule-navigation, .mobile-schedule-navigation {
+  .preset-button-container {
+    margin-bottom: 0.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .desktop-schedule-navigation {
+    .preset-button-container {
+      display: none;
+    }
+  }
+}
+
 .desktop-schedule-navigation {
   display: flex;
 }
@@ -966,6 +1097,17 @@ button:focus {
   display: none;
   height: 0;
   overflow: hidden;
+}
+
+.main-body {
+  position: relative;
+  
+  .header-controls {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background-color: inherit;
+  }
 }
 
 @media (min-width: 1025px) {
@@ -1011,6 +1153,12 @@ button:focus {
   .mobile-schedule-navigation {
     display: flex;
     height: auto;
+  }
+
+  .main-body {
+    .header-controls {
+      position: static;
+    }
   }
 }
 
