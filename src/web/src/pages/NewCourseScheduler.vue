@@ -43,7 +43,7 @@
                   size="sm"
                 >
                   <font-awesome-icon icon="save" class="mr-1" />
-                  View Saved Presets
+                  View Saved Schedules
                 </b-button>
               </b-col>
             </b-row>
@@ -98,7 +98,7 @@
                   size="sm"
                 >
                   <font-awesome-icon icon="save" class="mr-1" />
-                  View Saved Presets
+                  View Saved Schedules
                 </b-button>
               </b-col>
               <b-col cols="12" class="pt-2">
@@ -311,11 +311,11 @@
     </b-modal>
       <!-- Add a button to open the preset modal (e.g., in your header or sidebar) -->
   <b-button @click="showPresetModal = true" variant="secondary" class="mb-3">
-    View Saved Presets
+    View Saved Schedules
   </b-button>
 
     <!-- Preset Modal -->
-    <b-modal v-model="showPresetModal" title="Saved Presets">
+    <b-modal v-model="showPresetModal" title="Saved Schedules">
       <div>
         <ul>
           <li v-for="(preset, idx) in presets" :key="idx" class="mb-2">
@@ -330,7 +330,7 @@
         </ul>
         <hr />
         <b-form @submit.prevent="handleSavePreset">
-          <b-form-group label="New Preset Name:" label-for="new-preset-input">
+          <b-form-group label="New Schedule Name:" label-for="new-preset-input">
             <b-form-input
               id="new-preset-input"
               v-model="newPresetName"
@@ -338,7 +338,7 @@
             ></b-form-input>
           </b-form-group>
           <b-button type="submit" variant="primary">
-            Save Current Preset
+            Save Current Schedule
           </b-button>
         </b-form>
       </div>
@@ -756,12 +756,82 @@ export default {
   },
 
   loadPreset(preset) {
-    // Restore the preset state (adjust as needed)
+    // Clear existing selected courses first
+    Object.values(this.selectedCourses).forEach(course => {
+      course.selected = false;
+      course.sections.forEach(section => {
+        section.selected = false;
+      });
+    });
+    this.selectedCourses = {};
+
+    // Load the preset state
     this.selectedCourses = preset.state.selectedCourses;
     this.possibilities = preset.state.possibilities;
     this.index = preset.state.index;
-    // Optionally, trigger watchers or computed property updates if needed.
+
+    // Update the selection states of the courses
+    Object.values(this.selectedCourses).forEach(savedCourse => {
+      const course = this.courses.find(c => c.id === savedCourse.id);
+      if (course) {
+        course.selected = true;
+        this.$set(this.selectedCourses, course.id, course);
+
+        // Update section selections if any
+        savedCourse.sections.forEach(savedSection => {
+          if (savedSection.selected) {
+            const section = course.sections.find(s => s.crn === savedSection.crn);
+            if (section) {
+              section.selected = true;
+            }
+          }
+        });
+      }
+    });
+
+    // Save to cookies or storage based on login state
+    if (this.isLoggedIn) {
+      Object.values(this.selectedCourses).forEach(course => {
+        addStudentCourse({
+          name: course.name,
+          semester: this.selectedSemester,
+          cid: "-1",
+        });
+        course.sections.forEach(section => {
+          if (section.selected) {
+            addStudentCourse({
+              name: course.name,
+              semester: this.selectedSemester,
+              cid: section.crn,
+            });
+          }
+        });
+      });
+    } else {
+      SelectedCoursesCookie.load(this.$cookies)
+        .semester(this.selectedSemester)
+        .clear()
+        .save();
+      
+      Object.values(this.selectedCourses).forEach(course => {
+        SelectedCoursesCookie.load(this.$cookies)
+          .semester(this.selectedSemester)
+          .addCourse(course)
+          .save();
+        
+        course.sections.forEach(section => {
+          if (section.selected) {
+            SelectedCoursesCookie.load(this.$cookies)
+              .semester(this.selectedSemester)
+              .addCourseSection(course, section)
+              .save();
+          }
+        });
+      });
+    }
+
     this.showPresetModal = false;
+    this.getSchedules(); // Regenerate schedules with new selection
   },
 
   handleSavePreset() {
