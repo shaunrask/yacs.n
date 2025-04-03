@@ -37,14 +37,47 @@
             <!-- Single preset button above schedule -->
             <b-row class="mb-3">
               <b-col>
-                <b-button 
-                  @click="showPresetModal = true" 
+                <b-dropdown 
                   variant="secondary" 
                   size="sm"
+                  class="w-100"
                 >
-                  <font-awesome-icon icon="save" class="mr-1" />
-                  View Saved Schedules
-                </b-button>
+                  <template #button-content>
+                    <font-awesome-icon icon="save" class="mr-1" />
+                    View Saved Schedules
+                  </template>
+
+                  <!-- List saved schedules -->
+                  <template v-if="presets.length">
+                    <b-dropdown-item
+                      v-for="(preset, idx) in presets"
+                      :key="idx"
+                      @click="loadPreset(preset)"
+                      class="d-flex justify-content-between align-items-center"
+                    >
+                      <span class="text-truncate mr-2">{{ preset.name }}</span>
+                      <b-button
+                        size="sm"
+                        variant="link"
+                        class="p-0 ml-2 delete-btn"
+                        @click.stop="deletePreset(idx)"
+                      >
+                        <font-awesome-icon icon="trash" />
+                      </b-button>
+                    </b-dropdown-item>
+                    <b-dropdown-divider></b-dropdown-divider>
+                  </template>
+                  
+                  <b-dropdown-item v-if="!presets.length" disabled>
+                    No saved schedules yet
+                  </b-dropdown-item>
+                  
+                  <!-- Save new schedule option -->
+                  <b-dropdown-item @click="showSaveModal = true">
+                    <font-awesome-icon icon="plus" class="mr-2" />
+                    Save Current Schedule
+                  </b-dropdown-item>
+                </b-dropdown>
               </b-col>
             </b-row>
 
@@ -315,34 +348,85 @@
   </b-button>
 
     <!-- Preset Modal -->
-    <b-modal v-model="showPresetModal" title="Saved Schedules">
-      <div>
-        <ul>
-          <li v-for="(preset, idx) in presets" :key="idx" class="mb-2">
-            <span>{{ preset.name }}</span>
-            <b-button size="sm" @click="loadPreset(preset)" class="ml-2">
-              Load
-            </b-button>
-            <b-button size="sm" variant="danger" @click="deletePreset(idx)" class="ml-1">
-              Delete
-            </b-button>
-          </li>
-        </ul>
-        <hr />
-        <b-form @submit.prevent="handleSavePreset">
-          <b-form-group label="New Schedule Name:" label-for="new-preset-input">
-            <b-form-input
-              id="new-preset-input"
-              v-model="newPresetName"
-              required
-            ></b-form-input>
-          </b-form-group>
-          <b-button type="submit" variant="primary">
+    <b-modal v-model="showPresetModal" title="Saved Schedules" size="md">
+      <div class="d-flex align-items-stretch w-100">
+        <b-dropdown
+          id="dropdown-presets"
+          variant="primary"
+          text="View Saved Schedules"
+          class="w-100"
+        >
+          <!-- List each schedule as a dropdown item -->
+          <template v-if="presets.length">
+            <b-dropdown-item
+              v-for="(preset, idx) in presets"
+              :key="idx"
+              @click="loadPreset(preset)"
+              class="d-flex justify-content-between align-items-center"
+            >
+              <span class="text-truncate mr-2">{{ preset.name }}</span>
+              <b-button
+                size="sm"
+                variant="link"
+                class="p-0 ml-2 delete-btn"
+                @click.stop="deletePreset(idx)"
+              >
+                <font-awesome-icon icon="trash" />
+              </b-button>
+            </b-dropdown-item>
+            <b-dropdown-divider></b-dropdown-divider>
+          </template>
+          
+          <b-dropdown-item v-if="!presets.length" disabled>
+            No saved schedules yet
+          </b-dropdown-item>
+          
+          <b-dropdown-item @click="showSaveModal = true">
+            <font-awesome-icon icon="save" class="mr-2" />
             Save Current Schedule
-          </b-button>
-        </b-form>
+          </b-dropdown-item>
+        </b-dropdown>
       </div>
     </b-modal>
+
+    <!-- Add a new modal for saving schedules -->
+    <b-modal 
+      v-model="showSaveModal" 
+      title="Save Current Schedule"
+      @hidden="newPresetName = ''"
+    >
+      <b-form @submit.prevent="handleSavePreset">
+        <b-form-group
+          label="Schedule Name"
+          label-for="new-schedule-input"
+        >
+          <b-form-input
+            id="new-schedule-input"
+            v-model="newPresetName"
+            placeholder="Enter schedule name"
+            required
+            trim
+          />
+        </b-form-group>
+      </b-form>
+      
+      <template #modal-footer>
+        <b-button
+          variant="secondary"
+          @click="showSaveModal = false"
+        >
+          Cancel
+        </b-button>
+        <b-button
+          variant="success"
+          :disabled="!newPresetName.trim()"
+          @click="handleSavePreset"
+        >
+          Save
+        </b-button>
+      </template>
+    </b-modal>
+
   </b-container>
 </template>
 
@@ -377,7 +461,10 @@ import {
   withinDuration,
 } from "@/utils";
 
-import { faPaperPlane } from "@fortawesome/free-solid-svg-icons";
+import { faPaperPlane, faDownload, faTrash } from "@fortawesome/free-solid-svg-icons";
+import { library } from '@fortawesome/fontawesome-svg-core';
+
+library.add(faDownload, faTrash);
 
 const noConflict = (p, section) => {
   for (let i = 0; i < 5; i++) {
@@ -409,12 +496,16 @@ export default {
       scheduler: null,
       exportIcon: faPaperPlane,
       main: "col-md-9",
-
+      icons: {
+        download: faDownload,
+        trash: faTrash,
+      },
       isNavOpen: true, //for sidebar open check
 
       courseInfoModalCourse: null,
       showCourseInfoModal: false,
       showPresetModal: false,
+      showSaveModal: false,
       newPresetName: '',
       presets: [],
       possibilities: [
@@ -838,6 +929,7 @@ export default {
     if (this.newPresetName.trim()) {
       this.savePreset(this.newPresetName);
       this.newPresetName = '';
+      this.showSaveModal = false;
       this.fetchPresets();
     }
   },
@@ -1232,4 +1324,36 @@ button:focus {
   }
 }
 
+</style>
+
+<style lang="scss" scoped>
+.dropdown-item {
+  padding-right: 1rem;
+}
+
+.text-truncate {
+  max-width: 200px;
+}
+
+.delete-btn {
+  color: #6c757d;
+  &:hover {
+    color: #343a40;
+  }
+}
+
+::v-deep .dropdown-menu {
+  width: 100%;
+  min-width: 100%;
+  transform: none !important;
+}
+
+::v-deep .btn-group {
+  width: 100%;
+}
+
+::v-deep .dropdown-toggle {
+  width: 100%;
+  text-align: left;
+}
 </style>
