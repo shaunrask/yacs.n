@@ -37,47 +37,49 @@
             <!-- Single preset button above schedule -->
             <b-row class="mb-3">
               <b-col>
-                <b-dropdown 
-                  variant="secondary" 
-                  size="sm"
-                  class="w-100"
-                >
-                  <template #button-content>
-                    <font-awesome-icon icon="save" class="mr-1" />
-                    View Saved Schedules
-                  </template>
+                <div class="saved-schedules-dropdown">
+                  <b-dropdown 
+                    variant="secondary" 
+                    size="sm"
+                    class="w-100"
+                  >
+                    <template #button-content>
+                      <font-awesome-icon icon="save" class="mr-1" />
+                      View Saved Schedules
+                    </template>
 
-                  <!-- List saved schedules -->
-                  <template v-if="presets.length">
-                    <b-dropdown-item
-                      v-for="(preset, idx) in presets"
-                      :key="idx"
-                      @click="loadPreset(preset)"
-                      class="d-flex justify-content-between align-items-center"
-                    >
-                      <span class="text-truncate mr-2">{{ preset.name }}</span>
-                      <b-button
-                        size="sm"
-                        variant="link"
-                        class="p-0 ml-2 delete-btn"
-                        @click.stop="deletePreset(idx)"
+                    <!-- List saved schedules -->
+                    <template v-if="presets.length">
+                      <b-dropdown-item
+                        v-for="(preset, idx) in presets"
+                        :key="idx"
+                        @click="loadPreset(preset)"
+                        class="d-flex justify-content-between align-items-center"
                       >
-                        <font-awesome-icon icon="trash" />
-                      </b-button>
+                        <span class="text-truncate mr-2">{{ preset.name }}</span>
+                        <b-button
+                          size="sm"
+                          variant="link"
+                          class="p-0 ml-2 delete-btn"
+                          @click.stop="deletePreset(idx)"
+                        >
+                          <font-awesome-icon icon="trash" />
+                        </b-button>
+                      </b-dropdown-item>
+                      <b-dropdown-divider></b-dropdown-divider>
+                    </template>
+                    
+                    <b-dropdown-item v-if="!presets.length" disabled>
+                      No saved schedules yet
                     </b-dropdown-item>
-                    <b-dropdown-divider></b-dropdown-divider>
-                  </template>
-                  
-                  <b-dropdown-item v-if="!presets.length" disabled>
-                    No saved schedules yet
-                  </b-dropdown-item>
-                  
-                  <!-- Save new schedule option -->
-                  <b-dropdown-item @click="showSaveModal = true">
-                    <font-awesome-icon icon="plus" class="mr-2" />
-                    Save Current Schedule
-                  </b-dropdown-item>
-                </b-dropdown>
+                    
+                    <!-- Save new schedule option -->
+                    <b-dropdown-item @click="showSaveModal = true">
+                      <font-awesome-icon icon="plus" class="mr-2" />
+                      Save Current Schedule
+                    </b-dropdown-item>
+                  </b-dropdown>
+                </div>
               </b-col>
             </b-row>
 
@@ -1343,17 +1345,32 @@ button:focus {
 }
 
 ::v-deep .dropdown-menu {
-  width: 100%;
-  min-width: 100%;
+  width: auto; // Remove fixed width
+  min-width: 0; // Remove minimum width constraint
+  margin-top: 0;
+  top: 100% !important;
   transform: none !important;
+  left: 0 !important;
+  right: 0 !important; // Add right constraint
 }
 
 ::v-deep .btn-group {
-  width: 100%;
+  width: auto; // Allow natural width
 }
 
 ::v-deep .dropdown-toggle {
-  width: 100%;
+  width: auto; // Allow natural width
   text-align: left;
+}
+
+::v-deep .dropdown {
+  display: block; // Ensure dropdown takes full width
+  position: relative !important; // Change to relative positioning
+}
+
+// Remove the absolute positioning
+::v-deep .dropdown-menu.show {
+  position: absolute;
+  width: 100%; // Match parent width
 }
 </style>
