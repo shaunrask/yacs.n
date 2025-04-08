@@ -859,24 +859,23 @@ export default {
     this.selectedCourses = {};
 
     // Load the preset state
-    this.selectedCourses = preset.state.selectedCourses;
-    this.possibilities = preset.state.possibilities;
-    this.index = preset.state.index;
-
-    // Update the selection states of the courses
-    Object.values(this.selectedCourses).forEach(savedCourse => {
+    const savedCourses = preset.state.selectedCourses;
+  
+    // Update the selection states of the courses using Vue.set for reactivity
+    Object.values(savedCourses).forEach(savedCourse => {
       const course = this.courses.find(c => c.id === savedCourse.id);
       if (course) {
+        // Ensure we set the selected property properly
         course.selected = true;
+        
+        // Use Vue.set to ensure reactivity
         this.$set(this.selectedCourses, course.id, course);
 
         // Update section selections if any
-        savedCourse.sections.forEach(savedSection => {
-          if (savedSection.selected) {
-            const section = course.sections.find(s => s.crn === savedSection.crn);
-            if (section) {
-              section.selected = true;
-            }
+        course.sections.forEach(section => {
+          const savedSection = savedCourse.sections.find(s => s.crn === section.crn);
+          if (savedSection) {
+            section.selected = savedSection.selected;
           }
         });
       }
@@ -885,20 +884,24 @@ export default {
     // Save to cookies or storage based on login state
     if (this.isLoggedIn) {
       Object.values(this.selectedCourses).forEach(course => {
-        addStudentCourse({
-          name: course.name,
-          semester: this.selectedSemester,
-          cid: "-1",
-        });
-        course.sections.forEach(section => {
-          if (section.selected) {
-            addStudentCourse({
-              name: course.name,
-              semester: this.selectedSemester,
-              cid: section.crn,
-            });
-          }
-        });
+        // Only add course if it's actually selected
+        if (course.selected) {
+          addStudentCourse({
+            name: course.name,
+            semester: this.selectedSemester,
+            cid: "-1",
+          });
+          
+          course.sections.forEach(section => {
+            if (section.selected) {
+              addStudentCourse({
+                name: course.name,
+                semester: this.selectedSemester,
+                cid: section.crn,
+              });
+            }
+          });
+        }
       });
     } else {
       SelectedCoursesCookie.load(this.$cookies)
@@ -907,19 +910,21 @@ export default {
         .save();
       
       Object.values(this.selectedCourses).forEach(course => {
-        SelectedCoursesCookie.load(this.$cookies)
-          .semester(this.selectedSemester)
-          .addCourse(course)
-          .save();
-        
-        course.sections.forEach(section => {
-          if (section.selected) {
-            SelectedCoursesCookie.load(this.$cookies)
-              .semester(this.selectedSemester)
-              .addCourseSection(course, section)
-              .save();
-          }
-        });
+        if (course.selected) {
+          SelectedCoursesCookie.load(this.$cookies)
+            .semester(this.selectedSemester)
+            .addCourse(course)
+            .save();
+          
+          course.sections.forEach(section => {
+            if (section.selected) {
+              SelectedCoursesCookie.load(this.$cookies)
+                .semester(this.selectedSemester)
+                .addCourseSection(course, section)
+                .save();
+            }
+          });
+        }
       });
     }
 
@@ -1022,6 +1027,17 @@ export default {
         this.getSchedules();
       },
     },
+    selectedCourses: {
+      deep: true,
+      handler(newVal) {
+        // Ensure selected property stays in sync
+        Object.values(newVal).forEach(course => {
+          if (!course.selected) {
+            course.selected = true;
+          }
+        });
+      }
+    }
   },
 
   mounted() {
