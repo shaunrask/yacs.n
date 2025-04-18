@@ -99,8 +99,12 @@ export default {
   },
   props: {
     possibility: {
-      default: () => [],
-    },
+      type: Object,
+      default: () => ({
+        sections: [],
+        time: [0, 0, 0, 0, 0]
+      })
+    }
   },
   data() {
     return {
@@ -160,6 +164,9 @@ export default {
     mapSessionType(type) {
       return this.sessionTypes[type] == null ? type : this.sessionTypes[type];
     },
+    updateScheduleDisplay() {
+      // Implement your schedule display logic here
+    }
   },
   computed: {
     /**
@@ -211,10 +218,16 @@ export default {
     },
   },
   watch: {
-    possibility(val) {
-      this.temp = val;
-      console.log(this.temp);
-    },
+    possibility: {
+      handler(newVal) {
+        console.log('Schedule updated:', newVal);
+        // Trigger any necessary updates
+        this.$nextTick(() => {
+          this.updateScheduleDisplay();
+        });
+      },
+      deep: true
+    }
   },
 };
 </script>

@@ -10,7 +10,14 @@
       v-for="course of courses"
       :key="course.id"
     >
-      <CourseListing :course="course" v-on="$listeners" />
+      <CourseListing 
+        :course="course" 
+        :showAddButton="false"
+        defaultAction="toggleCollapse"
+        @addCourseSection="$emit('addCourseSection', $event[0], $event[1])"
+        @removeCourseSection="$emit('removeCourseSection', $event)"
+        @removeCourse="$emit('removeCourse', $event)"
+      />
     </b-list-group-item>
   </b-list-group>
 </template>
@@ -31,30 +38,10 @@ export default {
 };
 </script>
 
-<style lang="scss">
-#selected-course-list {
-  height: 100%;
-  min-height: 300px;
-  overflow-y: auto;
-  border: 1px solid #dee2e6;
-  border-radius: 0.25rem;
-  background-color: transparent;
-}
-
+<style scoped>
 .no-courses {
-  padding: 2rem;
   text-align: center;
-  color: #6c757d;
-}
-
-// Dark mode styles
-.dark {
-  #selected-course-list {
-    border-color: var(--dark-border-primary);
-  }
-
-  .no-courses {
-    color: var(--dark-text-secondary);
-  }
+  padding: 20px;
+  color: #666;
 }
 </style>

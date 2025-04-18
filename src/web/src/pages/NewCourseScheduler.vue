@@ -329,13 +329,11 @@ export default {
       this.loadedIndexCookie = 1;
     },
     addCourse(course) {
-      // Batch UI updates
-      this.$nextTick(() => {
-        this.$set(this.selectedCourses, course.id, course);
-        course.selected = true;
-      });
-      
-      // Handle backend updates asynchronously
+      // Immediately update UI
+      this.$set(this.selectedCourses, course.id, course);
+      course.selected = true;
+
+      // Handle backend updates
       if (this.isLoggedIn) {
         addStudentCourse({
           name: course.name,
@@ -343,6 +341,9 @@ export default {
           cid: "-1",
         }).catch(error => {
           console.error('Failed to add course:', error);
+          // Rollback UI changes on error
+          this.$delete(this.selectedCourses, course.id);
+          course.selected = false;
         });
       } else {
         SelectedCoursesCookie.load(this.$cookies)
@@ -350,14 +351,25 @@ export default {
           .addCourse(course)
           .save();
       }
+
+      // Trigger schedule update
+      this.$nextTick(() => {
+        this.getSchedules();
+      });
     },
     addCourseSection(course, section) {
       section.selected = true;
+      
+      // Handle backend updates
       if (this.isLoggedIn) {
         addStudentCourse({
           name: course.name,
           semester: this.selectedSemester,
           cid: section.crn,
+        }).catch(error => {
+          console.error('Failed to add section:', error);
+          // Rollback UI changes on error
+          section.selected = false;
         });
       } else {
         SelectedCoursesCookie.load(this.$cookies)
@@ -365,6 +377,11 @@ export default {
           .addCourseSection(course, section)
           .save();
       }
+
+      // Trigger schedule update
+      this.$nextTick(() => {
+        this.getSchedules();
+      });
     },
     removeCourse(course) {
       // Immediately update UI
@@ -374,7 +391,7 @@ export default {
         section.selected = false;
       });
 
-      // Handle backend updates asynchronously
+      // Handle backend updates
       if (this.isLoggedIn) {
         removeStudentCourse({
           name: course.name,
@@ -387,16 +404,26 @@ export default {
           .removeCourse(course)
           .save();
       }
+
+      // Trigger schedule update
+      this.$nextTick(() => {
+        this.getSchedules();
+      });
     },
     removeCourseSection(section) {
       if (section.selected) {
         section.selected = false;
 
+        // Handle backend updates
         if (this.isLoggedIn) {
           removeStudentCourse({
             name: section.department + "-" + section.level,
             semester: this.selectedSemester,
             cid: section.crn,
+          }).catch(error => {
+            console.error('Failed to remove section:', error);
+            // Rollback UI changes on error
+            section.selected = true;
           });
         } else {
           SelectedCoursesCookie.load(this.$cookies)
@@ -404,6 +431,11 @@ export default {
             .removeCourseSection(section)
             .save();
         }
+
+        // Trigger schedule update
+        this.$nextTick(() => {
+          this.getSchedules();
+        });
       }
     },
 
@@ -463,7 +495,7 @@ export default {
           },
         ];
       }
-    }, 100),
+    }, 50), // Reduced from 100ms to 50ms
     generateSchedule(c) {
       let courses = JSON.parse(JSON.stringify(c));
       if (courses.length === 0)

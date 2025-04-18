@@ -40,60 +40,53 @@
       v-model="showCollapse"
       :id="course.id"
     >
-      <slot name="collapseContent" :course="course">
-        <b-list-group flush>
-          <b-list-group-item
-            class="selected"
-            button
-            v-for="section in sortedSections"
-            :key="section.crn"
-            @click.stop="toggleCourseSection(section)"
-            :style="{
-              'border-left': section.selected
-                ? `4px solid ${getBorderColor(course.name)}`
-                : 'none',
-              'background-color': section.selected
-                ? `${getBackgroundColor(course.name)} !important`
-                : $store.state.darkMode
-                ? 'var(--dark-primary)'
-                : 'white',
-              color: section.selected
-                ? 'black'
-                : $store.state.darkMode
-                ? 'var(--dark-primary-text)'
-                : 'black',
-            }"
+      <b-list-group flush>
+        <b-list-group-item
+          class="selected"
+          button
+          v-for="section in sortedSections"
+          :key="section.crn"
+          @click.stop="toggleCourseSection(section)"
+          :style="{
+            'border-left': section.selected
+              ? `4px solid ${getBorderColor(course.name)}`
+              : 'none',
+            'background-color': section.selected
+              ? `${getBackgroundColor(course.name)} !important`
+              : $store.state.darkMode
+              ? 'var(--dark-primary)'
+              : 'white',
+            color: section.selected
+              ? 'black'
+              : $store.state.darkMode
+              ? 'var(--dark-primary-text)'
+              : 'black',
+          }"
+        >
+          <b-row class="mb-2" align-h="between">
+            <b-col cols="auto">
+              {{ section.crn }} - {{ section.sessions[0].section }} -
+              {{ getInstructor(section.sessions) }}
+            </b-col>
+            <b-col v-if="section.seats_total > 0" cols="auto">
+              <course-section-seats-badge
+                :seatsOpen="section.seats_open"
+                :seatsFilled="section.seats_filled"
+                :seatsTotal="section.seats_total"
+              />
+            </b-col>
+          </b-row>
+          <span
+            v-for="courseSession in section.sessions"
+            :key="courseSession.crn + courseSession.day_of_week + courseSession.time_start"
           >
-            <b-row class="mb-2" align-h="between">
-              <b-col cols="auto">
-                {{ section.crn }} - {{ section.sessions[0].section }} -
-                {{ getInstructor(section.sessions) }}
-              </b-col>
-              <b-col v-if="section.seats_total > 0" cols="auto">
-                <course-section-seats-badge
-                  :seatsOpen="section.seats_open"
-                  :seatsFilled="section.seats_filled"
-                  :seatsTotal="section.seats_total"
-                />
-              </b-col>
-            </b-row>
-
-            <span
-              v-for="courseSession in section.sessions"
-              :key="
-                courseSession.crn +
-                courseSession.day_of_week +
-                courseSession.time_start
-              "
-            >
-              {{ DAY_SHORTNAMES[courseSession.day_of_week + 1] }}:
-              {{ readableTime(courseSession.time_start) }} -
-              {{ readableTime(courseSession.time_end) }}
-              <br />
-            </span>
-          </b-list-group-item>
-        </b-list-group>
-      </slot>
+            {{ DAY_SHORTNAMES[courseSession.day_of_week + 1] }}:
+            {{ readableTime(courseSession.time_start) }} -
+            {{ readableTime(courseSession.time_end) }}
+            <br />
+          </span>
+        </b-list-group-item>
+      </b-list-group>
     </b-collapse>
   </div>
 </template>
@@ -194,6 +187,7 @@ export default {
      * Emits removeCourse and addCourse events
      */
     toggleCourse() {
+      console.log('Toggle course:', this.course.name, 'Current selected state:', this.course.selected);
       this.$emit(this.course.selected ? "removeCourse" : "addCourse", this.course);
     },
     /**
@@ -205,15 +199,12 @@ export default {
      * @param {CourseSection} section
      */
     toggleCourseSection(section) {
+      console.log('Toggle section:', section.crn, 'Current selected state:', section.selected);
       if (section.selected) {
         this.$emit("removeCourseSection", section);
       } else {
         this.$emit("addCourseSection", this.course, section);
       }
-    },
-    //used in the course explorer to show a courses info modal
-    showInfoModal() {
-      this.$emit("showCourseInfo", this.course);
     },
     getInstructor(sessions) {
       for (let i = 0; i < sessions.length; i++) {
@@ -221,6 +212,7 @@ export default {
           return sessions[i].instructor;
         }
       }
+      return "Staff";
     },
   },
   computed: {
