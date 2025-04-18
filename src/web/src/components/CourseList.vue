@@ -66,6 +66,8 @@
               <CourseListing
                 :course="course"
                 defaultAction="toggleCourse"
+                @addCourse="$emit('addCourse', $event)"
+                @removeCourse="$emit('removeCourse', $event)"
                 v-on="$listeners"
                 lazyLoadCollapse
               >
@@ -191,33 +193,21 @@ export default {
       return options;
     },
     filterCourses() {
-      const courses =
-        this.courseList !== null
-          ? this.courseList
-          : this.$store.getters.courses;
-
-      const filtered = this.filterSection(courses);
-
-      const find = filtered.find(
-        (course) =>
-          (course.full_title &&
-            course.full_title.toUpperCase() ===
-              this.textSearch.toUpperCase()) ||
-          course.title.toUpperCase() === this.textSearch.toUpperCase()
-      );
-
-      const fullListFiltered = this.filterSection(this.fullList);
-      const containString = fullListFiltered.filter(
-        (course) =>
-          this.checkFunction(course.title, this.textSearch) ||
-          this.checkFunction(course.department + course.level, this.textSearch)
-      );
-
-      if (find) {
-        return [find];
-      } else {
-        return containString;
-      }
+      if (!this.courseList) return [];
+      
+      return this.courseList.filter(course => {
+        if (this.selectedDepartment && course.department !== this.selectedDepartment) {
+          return false;
+        }
+        
+        if (this.selectedSubsemester && 
+            !course.sections.some(section => 
+              section.subsemester.display_string === this.selectedSubsemester.display_string)) {
+          return false;
+        }
+        
+        return true;
+      });
     },
   },
 };
@@ -247,9 +237,15 @@ export default {
 
   .course-listing {
     background-color: transparent;
+    transition: background-color 0.2s ease;
 
     &.bg-light {
       background-color: var(--light) !important;
+    }
+
+    // Add darker background for selected courses
+    &.selected {
+      background-color: rgba(0, 0, 0, 0.1) !important;
     }
   }
 
@@ -257,6 +253,11 @@ export default {
     .course-listing {
       &.bg-light {
         background-color: var(--dark-secondary) !important;
+      }
+      
+      // Darker background for selected courses in dark mode
+      &.selected {
+        background-color: rgba(255, 255, 255, 0.1) !important;
       }
     }
     
@@ -270,6 +271,15 @@ export default {
 // Override b-card styles
 .card {
   background-color: inherit !important;
+  transition: background-color 0.2s ease;
+
+  &:active {
+    background-color: rgba(0, 0, 0, 0.15) !important;
+  }
+}
+
+.dark .card:active {
+  background-color: rgba(255, 255, 255, 0.15) !important;
 }
 
 .card-header {

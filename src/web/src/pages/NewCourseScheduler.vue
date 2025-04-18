@@ -125,6 +125,7 @@
 
 <script>
 import { mapGetters, mapState } from "vuex";
+import _ from 'lodash';
 
 import NotificationsMixin from "@/mixins/NotificationsMixin";
 import ScheduleComponent from "@/components/Schedule";
@@ -328,13 +329,20 @@ export default {
       this.loadedIndexCookie = 1;
     },
     addCourse(course) {
-      this.$set(this.selectedCourses, course.id, course);
-      course.selected = true;
+      // Batch UI updates
+      this.$nextTick(() => {
+        this.$set(this.selectedCourses, course.id, course);
+        course.selected = true;
+      });
+      
+      // Handle backend updates asynchronously
       if (this.isLoggedIn) {
         addStudentCourse({
           name: course.name,
           semester: this.selectedSemester,
           cid: "-1",
+        }).catch(error => {
+          console.error('Failed to add course:', error);
         });
       } else {
         SelectedCoursesCookie.load(this.$cookies)
@@ -342,9 +350,6 @@ export default {
           .addCourse(course)
           .save();
       }
-      course.sections.forEach((section) =>
-        this.addCourseSection(course, section)
-      );
     },
     addCourseSection(course, section) {
       section.selected = true;
@@ -362,11 +367,14 @@ export default {
       }
     },
     removeCourse(course) {
+      // Immediately update UI
       this.$delete(this.selectedCourses, course.id);
       course.selected = false;
+      course.sections.forEach(section => {
+        section.selected = false;
+      });
 
-      course.sections.forEach((section) => this.removeCourseSection(section));
-
+      // Handle backend updates asynchronously
       if (this.isLoggedIn) {
         removeStudentCourse({
           name: course.name,
@@ -418,7 +426,7 @@ export default {
         this.addCourse(course);
       }
     },
-    getSchedules() {
+    getSchedules: _.debounce(function() {
       const oldLength = this.possibilities.length;
       try {
         if (Object.values(this.selectedCourses).length === 0) {
@@ -428,16 +436,15 @@ export default {
               time: [0, 0, 0, 0, 0],
             },
           ];
+          return;
         }
-        const result = this.generateSchedule(
-          Object.values(this.selectedCourses)
-        );
+        
+        const result = this.generateSchedule(Object.values(this.selectedCourses));
         if (!result.length) {
           throw new Error("conflict!");
         }
         this.possibilities = result;
 
-        //Don't set this.index to 0 if just loaded cookie
         if (this.loadedIndexCookie == 2) {
           if (oldLength != this.possibilities.length) {
             this.index = 0;
@@ -456,7 +463,7 @@ export default {
           },
         ];
       }
-    },
+    }, 100),
     generateSchedule(c) {
       let courses = JSON.parse(JSON.stringify(c));
       if (courses.length === 0)

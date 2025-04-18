@@ -194,11 +194,7 @@ export default {
      * Emits removeCourse and addCourse events
      */
     toggleCourse() {
-      if (this.course.selected) {
-        this.$emit("removeCourse", this.course);
-      } else {
-        this.$emit("addCourse", this.course);
-      }
+      this.$emit(this.course.selected ? "removeCourse" : "addCourse", this.course);
     },
     /**
      * Toggle use selection of course section
