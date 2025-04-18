@@ -43,101 +43,6 @@
             </b-col>
           </b-row>
         </div>
-<<<<<<< Updated upstream
-        <b-form-select
-          v-if="
-            !loading &&
-            scheduler.scheduleSubsemesters &&
-            scheduler.scheduleSubsemesters.length > 1
-          "
-          v-model="selectedScheduleSubsemester"
-          :options="scheduler.scheduleSubsemesters"
-          text-field="display_string"
-          value-field="display_string"
-        ></b-form-select>
-        <div id="allScheduleData" class="justify-content-right">
-          <!-- Made two seperate schedule navigators which turn on and off depending on mobile view -->
-          <div>
-            <!-- Desktop view - Display Message between the two change schedule buttons -->
-            <b-row class="justify-content-between align-items-center desktop-schedule-navigation">
-              <b-col cols="auto" class="schedule-navigation">
-                <b-button
-                  @click="
-                    changeSchedule(-1);
-                    updateIndexCookie();
-                  "
-                  size="sm"
-                >
-                  Prev
-                </b-button>
-              </b-col>
-              <b-col cols="auto">
-                <span v-if="scheduleDisplayMessage === 2">
-                  Add some sections to generate schedules!
-                </span>
-                <span v-else-if="scheduleDisplayMessage === 3">
-                  Can't display because of course conflict!
-                </span>
-                <span v-else>
-                  Displaying schedule {{ this.index + 1 }} out of
-                  {{ this.possibilities.length }}
-                </span>
-              </b-col>
-              <b-col cols="auto" class="schedule-navigation">
-                <b-button
-                  @click="
-                    changeSchedule(1);
-                    updateIndexCookie();
-                  "
-                  size="sm"
-                >
-                  Next
-                </b-button>
-              </b-col>
-            </b-row>
-
-            <!-- Mobile view  - Display Message First then change schedule buttons -->
-            <b-row
-              class="d-flex flex-column align-items-center text-center mobile-schedule-navigation"
-            >
-              <b-col cols="12" class="pt-2">
-                <span v-if="scheduleDisplayMessage === 2">
-                  Add some sections to generate schedules!
-                </span>
-                <span v-else-if="scheduleDisplayMessage === 3">
-                  Can't display because of course conflict!
-                </span>
-                <span v-else>
-                  Displaying schedule {{ this.index + 1 }} out of
-                  {{ this.possibilities.length }}
-                </span>
-              </b-col>
-              <b-row class="w-100 justify-content-between">
-                <b-col cols="auto" class="schedule-navigation">
-                  <b-button
-                    @click="
-                      changeSchedule(-1);
-                      updateIndexCookie();
-                    "
-                    size="sm"
-                  >
-                    Prev
-                  </b-button>
-                </b-col>
-                <b-col cols="auto" class="schedule-navigation">
-                  <b-button
-                    @click="
-                      changeSchedule(1);
-                      updateIndexCookie();
-                    "
-                    size="sm"
-                  >
-                    Next
-                  </b-button>
-                </b-col>
-              </b-row>
-            </b-row>
-=======
 
         <!-- Schedule component -->
         <Schedule v-if="loading" />
@@ -172,7 +77,6 @@
           </b-col>
         </b-row>
       </div>
->>>>>>> Stashed changes
 
       <!-- Course selection section - now below schedule -->
       <div class="col-12 course-selection-section">
@@ -218,72 +122,6 @@
         </b-card>
       </div>
     </b-row>
-<<<<<<< Updated upstream
-
-    <b-modal
-      id="courseInfoModal"
-      v-if="courseInfoModalCourse"
-      v-model="showCourseInfoModal"
-      :title="courseInfoModalCourse.name + ' ' + courseInfoModalCourse.title"
-      hide-footer
-    >
-      <span v-if="courseInfoModalCourse.frequency">
-        Offered: {{ courseInfoModalCourse.frequency }}
-        <br />
-        <br />
-      </span>
-      <span
-        v-if="
-          courseInfoModalCourse.min_credits == courseInfoModalCourse.max_credits
-        "
-      >
-        Credits: {{ courseInfoModalCourse.min_credits }}
-        <br />
-      </span>
-      <span v-else>
-        Credits: {{ courseInfoModalCourse.min_credits }} -
-        {{ courseInfoModalCourse.max_credits }}
-        <br />
-      </span>
-      <span>
-        {{
-          generateRequirementsText(
-            courseInfoModalCourse.prerequisites,
-            courseInfoModalCourse.corequisites,
-            courseInfoModalCourse.raw_precoreqs
-          )
-        }}
-      </span>
-      <span v-if="courseInfoModalCourse.description">
-        <br />
-        <br />
-        {{ courseInfoModalCourse.description }}
-      </span>
-      <br />
-      <br />
-      <b-button
-        variant="primary"
-        @click="
-          toggleCourse(courseInfoModalCourse);
-          showCourseInfoModal = !showCourseInfoModal;
-        "
-      >
-        {{
-          courseInfoModalCourse.selected
-            ? "Remove from schedule"
-            : "Add to schedule"
-        }}
-      </b-button>
-      <b-button
-        class="ml-2"
-        variant="secondary"
-        @click="showCourseInfoModal = !showCourseInfoModal"
-      >
-        Close
-      </b-button>
-    </b-modal>
-=======
->>>>>>> Stashed changes
   </b-container>
 </template>
 
@@ -764,207 +602,13 @@ export default {
   display: flex;
 }
 
-<<<<<<< Updated upstream
-// This is for the button for navigating each schedule option
-.schedule-navigation {
-  margin: 8px;
-}
-
-.card {
-  border: none !important;
-  font-size: 17px;
-
-  a:visited {
-    color: black;
-  }
-
-  .card-header {
-    background: white !important;
-  }
-}
-
-footer {
-  margin: 0px !important;
-}
-
-sidebar-panel-nav {
-  color: #fff;
-  text-decoration: none;
-  font-size: 1.5rem;
-  display: block;
-  padding-bottom: 0.5em;
-}
-
-#export-ics-button {
-  background: #3d4959 !important;
-}
-
-.b-dropdown .dropdown-menu {
-  // shifts export data menu left
-  transform: translateX(-10px);
-}
-
-.slide-enter-active,
-.slide-leave-active {
-  transition: transform 0.2s ease;
-}
-
-.slide-enter,
-.slide-leave-to {
-  transform: translateX(-100%);
-  transition: all 150ms ease-in 0s;
-}
-
-.sidebar-backdrop {
-  //it is a background feature when the sidebar opens, left here for easier modification that possibly happen on future.
-  background-color: rgba(255, 255, 255, 0);
-  width: 100vw;
-  height: 100vh;
-  position: fixed;
-  top: 0;
-  left: 0;
-  cursor: pointer;
-}
-
-.sidebar-panel {
-  // The actual view of sidebar back
-  overflow-y: auto;
-  background-color: #1eddff00;
-  position: fixed;
-  left: 0;
-  top: 0;
-  height: 100vh;
-  z-index: 999;
-  margin: 60px 0px 0px;
-  width: 25%;
-}
-
-.hidden {
-  visibility: hidden;
-}
-
-button {
-  cursor: pointer;
-}
-
-/* remove blue outline */
-button:focus {
-  outline: 0;
-}
-
-.burger-button {
-  position: relative;
-  height: 30px;
-  width: 32px;
-  display: block;
-  z-index: 999;
-  border: 0;
-  border-radius: 0;
-  background-color: transparent;
-  pointer-events: all;
-  transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
-}
-
-.burger-bar {
-  background-color: #239bca;
-  position: absolute;
-  top: 50%;
-  right: 6px;
-  left: 6px;
-  height: 2px;
-  width: auto;
-  margin-top: -1px;
-  transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1),
-    opacity 0.3s cubic-bezier(0.165, 0.84, 0.44, 1),
-    background-color 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
-}
-
-.burger-bar--1 {
-  transform: scale(0.5) rotate(-45deg) translate(0px, 10px);
-}
-
-.burger-bar--2 {
-  transform: scale(0.5) rotate(45deg) translate(0px, -10px);
-}
-
-.burger-bar--3 {
-  transform: scale(0.5) rotate(-45deg) translate(10px, 20px);
-}
-
-.burger-bar--4 {
-  transform: scale(0.5) rotate(45deg) translate(10px, -20px);
-}
-
-.burger-bar--5 {
-  transform: scale(0) rotate(-45deg) translate(0px, 10px);
-}
-
-.burger-bar--6 {
-  transform: scale(0) rotate(45deg) translate(0px, -10px);
-}
-
-.burger-button:hover .burger-bar--1 {
-  transform: scale(0.5) rotate(-45deg) translate(20px, 30px);
-}
-
-.no-touchevents .burger-bar--1:hover {
-  transform: scale(0.5) rotate(-45deg) translate(20px, 30px);
-}
-
-.burger-button:hover .burger-bar--2 {
-  transform: scale(0.5) rotate(45deg) translate(20px, -30px);
-}
-
-.no-touchevents .burger-bar--2:hover {
-  transform: scale(0.5) rotate(45deg) translate(20px, -30px);
-}
-
-.burger-button:hover .burger-bar--5 {
-  transform: scale(0.5) rotate(-45deg) translate(0px, 10px);
-}
-
-.no-touchevents .burger-bar--5:hover {
-  transform: scale(0.5) rotate(-45deg) translate(0px, 10px);
-}
-
-.burger-button:hover .burger-bar--6 {
-  transform: scale(0.5) rotate(45deg) translate(0px, -10px);
-}
-
-.no-touchevents .burger-bar--6:hover {
-  transform: scale(0.5) rotate(45deg) translate(0px, -10px);
-}
-
-#burger.active .burger-button {
-  transform: rotateY(-540deg);
-}
-
-#burger.active .burger-bar {
-  background-color: #32aad8;
-}
-
-.desktop-schedule-navigation {
-  display: flex;
-}
-
-.mobile-schedule-navigation {
-=======
 // Remove sidebar-related styles since we're not using them anymore
 .sidebar-panel,
 .sidebar-backdrop,
 .sidebar {
->>>>>>> Stashed changes
   display: none;
 }
 
-<<<<<<< Updated upstream
-@media (min-width: 1025px) {
-  .main-body {
-    min-height: 100vh;
-  }
-}
-
-=======
 // Remove burger menu styles since we don't need them anymore
 #burger {
   display: none;
@@ -980,46 +624,13 @@ button:focus {
 }
 
 // Mobile adjustments
->>>>>>> Stashed changes
 @media (max-width: 768px) {
   .main-body {
     display: block;
   }
 
   h5 {
-<<<<<<< Updated upstream
-    font-size: .9em;
-  }
-
-  // the arrow that makes the sidebar appear or not
-  #burger {
-    display: none;
-  }
-
-  .sidebar-panel {
-    position: static;
-    width: 100%;
-    margin: 0;
-  }
-
-  .sidebar {
-    padding: 0;
-  }
-
-  .schedule-navigation {
-    margin: 0px;
-  }
-  
-  .desktop-schedule-navigation {
-    display: none;
-  }
-
-  .mobile-schedule-navigation {
-    display: flex;
-    height: auto;
-=======
     font-size: 0.9em;
->>>>>>> Stashed changes
   }
 }
 </style>
