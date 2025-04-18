@@ -1,43 +1,48 @@
 <template>
   <div class="d-flex flex-column flex-grow-1">
     <div class="course-search">
-      <b-form-group label="Search" label-for="search">
-        <b-form-input
-          id="search"
-          v-model="textSearch"
-          :debounce="debounceTime"
-          placeholder="Intro to College - COLG 1030"
-          list="list-id"
-        ></b-form-input>
-      </b-form-group>
+      <b-form @submit.prevent="performSearch">
+        <b-form-group label="Search" label-for="search">
+          <b-form-input
+            id="search"
+            v-model="textSearch"
+            placeholder="Intro to College - COLG 1030"
+            list="list-id"
+          ></b-form-input>
+        </b-form-group>
 
-      <b-row>
-        <!-- >2 b/c default ALL option always present -->
-        <b-col v-if="subsemesterOptions.length > 2">
-          <b-form-group label="Filter Sub-Semester" for="sub-semester">
-            <b-form-select
-              v-model="selectedSubsemester"
-              :options="subsemesterOptions"
-            ></b-form-select>
-          </b-form-group>
-        </b-col>
-        <b-col>
-          <b-form-group label="Filter Department" for="department">
-            <b-form-select
-              v-model="selectedDepartment"
-              :options="departmentOptions"
-            ></b-form-select>
-          </b-form-group>
-        </b-col>
-      </b-row>
+        <b-row>
+          <b-col v-if="subsemesterOptions.length > 2">
+            <b-form-group label="Filter Sub-Semester" for="sub-semester">
+              <b-form-select
+                v-model="selectedSubsemester"
+                :options="subsemesterOptions"
+              ></b-form-select>
+            </b-form-group>
+          </b-col>
+          <b-col>
+            <b-form-group label="Filter Department" for="department">
+              <b-form-select
+                v-model="selectedDepartment"
+                :options="departmentOptions"
+              ></b-form-select>
+            </b-form-group>
+          </b-col>
+        </b-row>
+        
+        <b-button type="submit" variant="primary" class="mt-2" data-cy="search-courses-btn">
+          Search Courses
+        </b-button>
+      </b-form>
     </div>
-    <!-- Start of Dynamic Scrolling Rendering To Account For Varying Course Data. > -->
+
     <hr />
-    <div id="scroll-box" data-cy="course-list">
+    <div id="scroll-box" data-cy="course-list" v-if="hasSearched">
       <div v-if="filterCourses.length == 0" class="no-courses">
         Oops, no results!
       </div>
       <DynamicScroller
+        v-else
         class="scroller"
         :items="filterCourses"
         :min-item-size="10"
@@ -115,7 +120,7 @@ export default {
       selectedSubsemester: null,
       selectedDepartment: null,
       courseList: null,
-      debounceTime: 300,
+      hasSearched: false, // New flag to track if search has been performed
     };
   },
   created() {
@@ -130,6 +135,10 @@ export default {
     /* wrapper for querying with search */
     // todo: get courses should be changed
     //text parameter comes from watch
+    performSearch() {
+      this.hasSearched = true;
+      this.updateCourseList();
+    },
     updateCourseList() {
       getCourses(this.selectedSemester, this.textSearch, false).then(
         (course_list) => {
@@ -164,11 +173,7 @@ export default {
     },
   },
   watch: {
-    /* This value gets debounced */
-    textSearch: function () {
-      //store in temp to conserve textSearch in input box on screen but removes extra characters for comparing
-      this.updateCourseList();
-    },
+    // Remove the textSearch watcher
   },
   computed: {
     ...mapState(["selectedSemester", "subsemesters", "departments"]),
