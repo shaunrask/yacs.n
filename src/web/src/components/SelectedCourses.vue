@@ -31,21 +31,30 @@ export default {
 };
 </script>
 
-<style scoped lang="scss">
+<style lang="scss">
 #selected-course-list {
-  overflow-y: scroll !important;
-  overflow-x: auto;
-  min-height: 200px;
-  flex-grow: 1;
-  flex-basis: 0px; // allows flex and scroll combo
-  border-bottom: 1px solid #dbdbdc;
+  height: 100%;
+  min-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #dee2e6;
+  border-radius: 0.25rem;
+  background-color: transparent;
 }
+
 .no-courses {
-  margin-right: 20px;
-  border-style: solid;
-  border-width: 2px;
-  border-color: rgb(0, 0, 0, 0.05);
-  font-size: 16px;
-  padding: 20px;
+  padding: 2rem;
+  text-align: center;
+  color: #6c757d;
+}
+
+// Dark mode styles
+.dark {
+  #selected-course-list {
+    border-color: var(--dark-border-primary);
+  }
+
+  .no-courses {
+    color: var(--dark-text-secondary);
+  }
 }
 </style>

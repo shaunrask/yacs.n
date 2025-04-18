@@ -1,128 +1,126 @@
 <template>
-  <b-container fluid class="py-3 h-100 main-body">
-    <b-row>
-      <!-- Main schedule section - now full width -->
-      <div class="col-12">
-        <!-- Schedule controls and display -->
-        <div class="header-controls mb-3">
-          <b-form-select
-            v-if="!loading && scheduler.scheduleSubsemesters && scheduler.scheduleSubsemesters.length > 1"
-            v-model="selectedScheduleSubsemester"
-            :options="scheduler.scheduleSubsemesters.map((s) => s.display_string)"
-          ></b-form-select>
+  <div class="scheduler-container">
+    <!-- Top section with schedule -->
+    <div class="schedule-section">
+      <b-container fluid class="py-3">
+        <b-row>
+          <div class="col-12">
+            <!-- Schedule controls and display -->
+            <div class="header-controls mb-3">
+              <b-form-select
+                v-if="!loading && scheduler.scheduleSubsemesters && scheduler.scheduleSubsemesters.length > 1"
+                v-model="selectedScheduleSubsemester"
+                :options="scheduler.scheduleSubsemesters.map((s) => s.display_string)"
+              ></b-form-select>
 
-          <!-- Schedule navigation -->
-          <b-row class="justify-content-between align-items-center mt-3">
-            <b-col cols="auto">
-              <b-button
-                @click="changeSchedule(-1); updateIndexCookie();"
-                size="sm"
-              >
-                Prev
-              </b-button>
-            </b-col>
-            <b-col cols="auto">
-              <span v-if="scheduleDisplayMessage === 2">
-                Add some sections to generate schedules!
-              </span>
-              <span v-else-if="scheduleDisplayMessage === 3">
-                Can't display because of course conflict!
-              </span>
-              <span v-else>
-                Displaying schedule {{ this.index + 1 }} out of
-                {{ this.possibilities.length }}
-              </span>
-            </b-col>
-            <b-col cols="auto">
-              <b-button
-                @click="changeSchedule(1); updateIndexCookie();"
-                size="sm"
-              >
-                Next
-              </b-button>
-            </b-col>
-          </b-row>
-        </div>
+              <!-- Schedule navigation -->
+              <b-row class="justify-content-between align-items-center mt-3">
+                <b-col cols="auto">
+                  <b-button
+                    @click="changeSchedule(-1); updateIndexCookie();"
+                    size="sm"
+                  >
+                    Prev
+                  </b-button>
+                </b-col>
+                <b-col cols="auto">
+                  <span v-if="scheduleDisplayMessage === 2">
+                    Add some sections to generate schedules!
+                  </span>
+                  <span v-else-if="scheduleDisplayMessage === 3">
+                    Can't display because of course conflict!
+                  </span>
+                  <span v-else>
+                    Displaying schedule {{ this.index + 1 }} out of
+                    {{ this.possibilities.length }}
+                  </span>
+                </b-col>
+                <b-col cols="auto">
+                  <b-button
+                    @click="changeSchedule(1); updateIndexCookie();"
+                    size="sm"
+                  >
+                    Next
+                  </b-button>
+                </b-col>
+              </b-row>
+            </div>
 
-        <!-- Schedule component -->
-        <Schedule v-if="loading" />
-        <Schedule v-else :possibility="possibilities[index]"></Schedule>
+            <!-- Schedule component -->
+            <Schedule v-if="loading" />
+            <Schedule v-else :possibility="possibilities[index]"></Schedule>
 
-        <!-- Schedule info -->
-        <b-row class="align-items-center mb-4">
-          <b-col>
-            <h5>CRNs: {{ selectedCrns }}</h5>
-            <h5>Credits: {{ totalCredits }}</h5>
-          </b-col>
-          <b-col class="d-flex flex-column align-items-end">
-            <b-form-checkbox
-              class="mt-2"
-              size="sm"
-              :checked="$store.state.colorBlindAssist"
-              @change="toggleColors()"
-              switch
-            >
-              Color Blind Assistance
-            </b-form-checkbox>
-            <b-dropdown text="Export Data" class="mt-2" right>
-              <b-dropdown-item @click="exportScheduleToIcs">
-                <font-awesome-icon :icon="exportIcon" />
-                Export To ICS
-              </b-dropdown-item>
-              <b-dropdown-item @click="exportScheduleToImage">
-                <font-awesome-icon :icon="exportIcon" />
-                Export To Image
-              </b-dropdown-item>
-            </b-dropdown>
-          </b-col>
+            <!-- Schedule info -->
+            <b-row class="align-items-center mb-4">
+              <b-col>
+                <h5>CRNs: {{ selectedCrns }}</h5>
+                <h5>Credits: {{ totalCredits }}</h5>
+              </b-col>
+              <b-col class="d-flex flex-column align-items-end">
+                <b-form-checkbox
+                  class="mt-2"
+                  size="sm"
+                  :checked="$store.state.colorBlindAssist"
+                  @change="toggleColors()"
+                  switch
+                >
+                  Color Blind Assistance
+                </b-form-checkbox>
+                <b-dropdown text="Export Data" class="mt-2" right>
+                  <b-dropdown-item @click="exportScheduleToIcs">
+                    <font-awesome-icon :icon="exportIcon" />
+                    Export To ICS
+                  </b-dropdown-item>
+                  <b-dropdown-item @click="exportScheduleToImage">
+                    <font-awesome-icon :icon="exportIcon" />
+                    Export To Image
+                  </b-dropdown-item>
+                </b-dropdown>
+              </b-col>
+            </b-row>
+          </div>
         </b-row>
-      </div>
+      </b-container>
+    </div>
 
-      <!-- Course selection section - now below schedule -->
-      <div class="col-12 course-selection-section">
-        <b-card no-body>
-          <b-tabs card>
-            <b-tab title="Course Search" active data-cy="course-search-tab">
-              <b-card-text>
-                <CenterSpinner
-                  v-if="loading"
-                  class="d-flex flex-grow-1 flex-column w-100 justify-content-center align-items-center"
-                  :height="60"
-                  :fontSize="1"
-                  loadingMessage="Courses"
-                  :topSpacing="0"
-                />
-                <CourseList
-                  v-if="!loading"
-                  @addCourse="addCourse"
-                  @removeCourse="removeCourse"
-                  @showCourseInfo="showCourseInfo"
-                  class="w-100"
-                />
-              </b-card-text>
-            </b-tab>
-            <b-tab data-cy="selected-courses-tab">
-              <template v-slot:title>
-                <div class="text-center" data-cy="selected-courses-tab-header">
-                  Selected Courses
-                  <b-badge variant="light" data-cy="num-selected-courses">
-                    {{ numSelectedCourses }}
-                  </b-badge>
-                </div>
-              </template>
-              <b-card-text class="w-100">
-                <SelectedCourses
-                  :courses="selectedCourses"
-                  @removeCourse="removeCourse"
-                  @showCourseInfo="showCourseInfo"
-                />
-              </b-card-text>
-            </b-tab>
-          </b-tabs>
-        </b-card>
-      </div>
-    </b-row>
-  </b-container>
+    <!-- Bottom section with course selection - full width -->
+    <div class="course-selection-section">
+      <b-tabs content-class="mt-3" fill>
+        <b-tab title="Course Search" active data-cy="course-search-tab">
+          <CenterSpinner
+            v-if="loading"
+            class="d-flex flex-grow-1 flex-column w-100 justify-content-center align-items-center"
+            :height="60"
+            :fontSize="1"
+            loadingMessage="Courses"
+            :topSpacing="0"
+          />
+          <CourseList
+            v-if="!loading"
+            @addCourse="addCourse"
+            @removeCourse="removeCourse"
+            @showCourseInfo="showCourseInfo"
+            class="w-100"
+          />
+        </b-tab>
+        <b-tab data-cy="selected-courses-tab">
+          <template v-slot:title>
+            <div class="text-center" data-cy="selected-courses-tab-header">
+              Selected Courses
+              <b-badge variant="light" data-cy="num-selected-courses">
+                {{ numSelectedCourses }}
+              </b-badge>
+            </div>
+          </template>
+          <SelectedCourses
+            :courses="selectedCourses"
+            @removeCourse="removeCourse"
+            @showCourseInfo="showCourseInfo"
+          />
+        </b-tab>
+      </b-tabs>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -587,46 +585,106 @@ export default {
 </script>
 
 <style lang="scss">
-.course-selection-section {
-  margin-top: 2rem;
-  margin-bottom: 2rem;
-}
-
-.tab-content {
+.scheduler-container {
   display: flex;
-  flex-grow: 1;
-  font-size: 15px;
-}
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: var(--light);
 
-.tab-content > .active {
-  display: flex;
-}
-
-// Remove sidebar-related styles since we're not using them anymore
-.sidebar-panel,
-.sidebar-backdrop,
-.sidebar {
-  display: none;
-}
-
-// Remove burger menu styles since we don't need them anymore
-#burger {
-  display: none;
-}
-
-// Adjust main content styles
-.main-body {
-  .header-controls {
-    position: relative;
-    z-index: 1000;
-    background-color: inherit;
+  &.dark {
+    background-color: var(--dark-primary);
   }
+}
+
+.schedule-section {
+  flex: 0 0 auto;
+}
+
+.course-selection-section {
+  flex: 1 0 auto;
+  width: 100%;
+  border-top: 1px solid #dee2e6;
+  background-color: var(--light);
+
+  .nav-tabs {
+    padding: 0 1rem;
+    background-color: var(--light);
+    border-bottom: 1px solid #dee2e6;
+
+    .nav-item {
+      background-color: var(--light);
+      
+      .nav-link {
+        background-color: var(--light);
+        
+        &.active {
+          background-color: var(--light);
+          border-bottom-color: var(--light);
+        }
+      }
+    }
+  }
+
+  .tab-content {
+    padding: 1rem;
+    height: 100%;
+    min-height: 400px;
+    overflow-y: auto;
+    background-color: var(--light);
+  }
+
+  .tab-pane {
+    height: 100%;
+  }
+
+  // Dark mode specific styles
+  .dark & {
+    background-color: var(--dark-primary);
+    border-top-color: var(--dark-border-primary);
+
+    .nav-tabs {
+      background-color: var(--dark-primary);
+      border-bottom-color: var(--dark-border-primary);
+
+      .nav-item {
+        background-color: var(--dark-primary);
+        
+        .nav-link {
+          background-color: var(--dark-primary);
+          color: var(--dark-text-primary);
+          
+          &.active {
+            background-color: var(--dark-primary);
+            border-bottom-color: var(--dark-primary);
+            color: var(--dark-text-primary);
+          }
+        }
+      }
+    }
+
+    .tab-content {
+      background-color: var(--dark-primary);
+    }
+  }
+}
+
+// Ensure CourseList and SelectedCourses components fill available space
+::v-deep .course-list,
+::v-deep .selected-courses {
+  height: 100%;
+  min-height: 350px;
 }
 
 // Mobile adjustments
 @media (max-width: 768px) {
-  .main-body {
-    display: block;
+  .schedule-section {
+    padding: 0.5rem;
+  }
+
+  .course-selection-section {
+    .tab-content {
+      padding: 0.5rem;
+    }
   }
 
   h5 {

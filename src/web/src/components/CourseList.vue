@@ -230,34 +230,38 @@ export default {
 };
 </script>
 
-<style scoped lang="scss">
-#scroll-box {
-  // overflow-y: scroll !important;
-  // overflow-x: hidden;
-  flex-grow: 1;
-  flex-basis: 0px; // allows flex and scroll combo
-  // flex-grow will set height during runtime
-  min-height: 200px; // fix for when at breakpoint <= md. Height isn't filling for some reason.
-}
-
-.scroller {
+<style lang="scss">
+.course-list {
+  display: flex;
+  flex-direction: column;
   height: 100%;
-  overflow-x: hidden;
-}
+  
+  .course-search {
+    flex: 0 0 auto;
+    padding: 1rem;
+  }
 
-.form-group {
-  font-size: 16px;
-}
-.course-listing {
-  padding: 10px;
-  border-bottom: 1px solid #dbdbdc;
-}
+  #scroll-box {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    min-height: 300px;
+  }
 
-.no-courses {
-  border-style: solid;
-  border-width: 2px;
-  border-color: rgb(0, 0, 0, 0.05);
-  font-size: 17px;
-  padding: 20px;
+  .course-listing {
+    background-color: transparent;
+
+    &.bg-light {
+      background-color: var(--light) !important;
+    }
+  }
+
+  // Dark mode styles
+  .dark & {
+    .course-listing {
+      &.bg-light {
+        background-color: var(--dark-secondary) !important;
+      }
+    }
+  }
 }
 </style>
