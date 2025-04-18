@@ -1,6 +1,6 @@
 <template>
-  <div class="d-flex flex-column flex-grow-1">
-    <div class="course-search">
+  <div class="d-flex flex-column flex-grow-1 course-list">
+    <div class="course-search sticky-top">
       <b-form @submit.prevent="performSearch">
         <b-form-group label="Search" label-for="search">
           <b-form-input
@@ -29,7 +29,7 @@
             </b-form-group>
           </b-col>
         </b-row>
-        
+
         <b-button type="submit" variant="primary" class="mt-2" data-cy="search-courses-btn">
           Search Courses
         </b-button>
@@ -38,9 +38,11 @@
 
     <hr />
     <div id="scroll-box" data-cy="course-list" v-if="hasSearched">
-      <div v-if="filterCourses.length == 0" class="no-courses">
-        Oops, no results!
+      <div v-if="filterCourses.length == 0" class="text-center text-muted mt-3">
+        <b-icon icon="exclamation-circle" font-scale="1.5" class="mb-2"></b-icon>
+        <p>Oops, no results found for your search.</p>
       </div>
+
       <DynamicScroller
         v-else
         class="scroller"
@@ -56,9 +58,10 @@
             :data-index="index"
             :emitResize="true"
           >
-            <div
-              class="course-listing"
+            <b-card
+              class="mb-2"
               :class="{ 'bg-light': course.selected }"
+              body-class="p-3"
             >
               <CourseListing
                 :course="course"
@@ -68,12 +71,8 @@
               >
                 <template #toggleCollapseButton="{ course }">
                   <button
-                    v-show="
-                      course.corequisites ||
-                      course.prerequisites ||
-                      course.raw_precoreqs
-                    "
-                    class="btn"
+                    v-show="course.corequisites || course.prerequisites || course.raw_precoreqs"
+                    class="btn btn-sm text-primary"
                     @click.stop="courseInfoModalToggle(course)"
                     data-cy="course-info-button"
                   >
@@ -84,7 +83,7 @@
                   {{ null }}
                 </template>
               </CourseListing>
-            </div>
+            </b-card>
           </DynamicScrollerItem>
         </template>
       </DynamicScroller>
@@ -120,21 +119,24 @@ export default {
       selectedSubsemester: null,
       selectedDepartment: null,
       courseList: null,
-      hasSearched: false, // New flag to track if search has been performed
+      hasSearched: false,
     };
   },
   created() {
     getDepartments().then((departments) => {
       this.departmentOptions.push(...departments.map((d) => d.department));
     });
+    // Set initial subsemester value
+    this.$nextTick(() => {
+      if (this.subsemesterOptions.length > 0) {
+        this.selectedSubsemester = this.subsemesterOptions[0].value;
+      }
+    });
   },
   methods: {
     courseInfoModalToggle(course) {
       this.$emit("showCourseInfo", course);
     },
-    /* wrapper for querying with search */
-    // todo: get courses should be changed
-    //text parameter comes from watch
     performSearch() {
       this.hasSearched = true;
       this.updateCourseList();
@@ -154,10 +156,7 @@ export default {
       const input = courseInput
         .trim()
         .replace(/[ !+=_;:'?.>,<|)(*&^%$#@~`-]+/g, "");
-      if (input.includes(text)) {
-        return true;
-      }
-      return false;
+      return input.includes(text);
     },
     filterSection(courses) {
       return courses.filter(
@@ -172,9 +171,6 @@ export default {
       );
     },
   },
-  watch: {
-    // Remove the textSearch watcher
-  },
   computed: {
     ...mapState(["selectedSemester", "subsemesters", "departments"]),
     fullList() {
@@ -185,7 +181,6 @@ export default {
         ...this.departments.map(({ department }) => department)
       );
     },
-
     subsemesterOptions() {
       let options = [{ text: "All", value: null }];
       options.push(
@@ -193,15 +188,9 @@ export default {
           return { text: subsemester.display_string, value: subsemester };
         })
       );
-      // Once we get new data for the <select>, v-model will retain its old value.
-      // Need to update this value after receving new data to keep values consistent.
-      // eslint-disable-next-line
-      this.selectedSubsemester = options[0].value;
       return options;
     },
-    // returns exact match if possible.
-    // if no exact match exists, returns similar options.
-    filterCourses: function () {
+    filterCourses() {
       const courses =
         this.courseList !== null
           ? this.courseList
@@ -209,7 +198,6 @@ export default {
 
       const filtered = this.filterSection(courses);
 
-      //returns exact match, if not found, then department filtered list
       const find = filtered.find(
         (course) =>
           (course.full_title &&
@@ -240,10 +228,15 @@ export default {
   display: flex;
   flex-direction: column;
   height: 100%;
-  
+  max-width: 1200px;
+  margin: 0 auto;
+
   .course-search {
     flex: 0 0 auto;
     padding: 1rem;
+    z-index: 10;
+    border-bottom: 1px solid #ddd;
+    background-color: inherit;
   }
 
   #scroll-box {
@@ -260,13 +253,26 @@ export default {
     }
   }
 
-  // Dark mode styles
   .dark & {
     .course-listing {
       &.bg-light {
         background-color: var(--dark-secondary) !important;
       }
     }
+    
+    .course-search {
+      background-color: var(--dark-primary);
+      border-bottom-color: var(--dark-border-primary);
+    }
   }
+}
+
+// Override b-card styles
+.card {
+  background-color: inherit !important;
+}
+
+.card-header {
+  display: none !important;
 }
 </style>
