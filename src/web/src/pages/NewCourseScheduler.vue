@@ -1,26 +1,49 @@
 <template>
   <b-container fluid class="py-3 h-100 main-body">
-    <b-row class="h-100">
-      <div v-if="isNavOpen" class="col-md-3"></div>
-      <div :class="[main]">
-        <!--This is a button, an animated one-->
-        <div
-          id="burger"
-          :class="{ active: isNavOpen }"
-          @click.prevent="toggleNav"
-        >
-          <slot>
-            <button type="button" class="burger-button">
-              <!--v-if="!isNavOpen"-->
-              <span class="burger-bar burger-bar--1"></span>
-              <span class="burger-bar burger-bar--2"></span>
-              <span class="burger-bar burger-bar--3"></span>
-              <span class="burger-bar burger-bar--4"></span>
-              <span class="burger-bar burger-bar--5"></span>
-              <span class="burger-bar burger-bar--6"></span>
-            </button>
-          </slot>
+    <b-row>
+      <!-- Main schedule section - now full width -->
+      <div class="col-12">
+        <!-- Schedule controls and display -->
+        <div class="header-controls mb-3">
+          <b-form-select
+            v-if="!loading && scheduler.scheduleSubsemesters && scheduler.scheduleSubsemesters.length > 1"
+            v-model="selectedScheduleSubsemester"
+            :options="scheduler.scheduleSubsemesters.map((s) => s.display_string)"
+          ></b-form-select>
+
+          <!-- Schedule navigation -->
+          <b-row class="justify-content-between align-items-center mt-3">
+            <b-col cols="auto">
+              <b-button
+                @click="changeSchedule(-1); updateIndexCookie();"
+                size="sm"
+              >
+                Prev
+              </b-button>
+            </b-col>
+            <b-col cols="auto">
+              <span v-if="scheduleDisplayMessage === 2">
+                Add some sections to generate schedules!
+              </span>
+              <span v-else-if="scheduleDisplayMessage === 3">
+                Can't display because of course conflict!
+              </span>
+              <span v-else>
+                Displaying schedule {{ this.index + 1 }} out of
+                {{ this.possibilities.length }}
+              </span>
+            </b-col>
+            <b-col cols="auto">
+              <b-button
+                @click="changeSchedule(1); updateIndexCookie();"
+                size="sm"
+              >
+                Next
+              </b-button>
+            </b-col>
+          </b-row>
         </div>
+<<<<<<< Updated upstream
         <b-form-select
           v-if="
             !loading &&
@@ -114,114 +137,88 @@
                 </b-col>
               </b-row>
             </b-row>
+=======
 
-            <Schedule v-if="loading" />
-            <Schedule v-else :possibility="possibilities[index]"></Schedule>
-            <b-row class="align-items-center">
-              <!-- CRNs and Credits -->
-              <b-col class="m-2">
-                <h5>CRNs: {{ selectedCrns }}</h5>
-                <h5>Credits: {{ totalCredits }}</h5>
-              </b-col>
-              <!-- Color Blind Assistance -->
-              <b-col class="m-2 d-flex flex-column align-items-end">
-                <b-form-checkbox
-                  class="mt-2"
-                  size="sm"
-                  :checked="$store.state.colorBlindAssist"
-                  @change="toggleColors()"
-                  switch
-                >
-                  Color Blind Assistance
-                </b-form-checkbox>
-                <!-- Export Data with dropdown aligned to the right -->
-                <b-dropdown text="Export Data" class="mt-2" right>
-                  <b-dropdown-item @click="exportScheduleToIcs">
-                    <font-awesome-icon :icon="exportIcon" />
-                    Export To ICS
-                  </b-dropdown-item>
-                  <b-dropdown-item @click="exportScheduleToImage">
-                    <font-awesome-icon :icon="exportIcon" />
-                    Export To Image
-                  </b-dropdown-item>
-                </b-dropdown>
-              </b-col>
-            </b-row>
-          </div>
-        </div>
-        <div class="sidebar">
-          <!-- Side bar or course selector and code below is for future changes in case-->
-          <!--<div class="sidebar-backdrop" v-if="isNavOpen"></div>-->
-          <transition name="slide">
-            <div v-if="isNavOpen" class="sidebar-panel">
-              <div class="sidebar-panel-nav" style="height: 100%;">
-                <b-col
-                  class="d-flex flex-column"
-                  ref="sidebar"
-                  style="height: 100%; padding: 1px;"
-                >
-                  <b-card no-body class="h-100">
-                    <b-tabs card class="h-100 d-flex flex-column flex-grow-1">
-                      <b-tab
-                        title="Course Search"
-                        active
-                        class="flex-grow-1 w-100"
-                        data-cy="course-search-tab"
-                      >
-                        <b-card-text class="d-flex flex-grow-1 w-100">
-                          <CenterSpinner
-                            v-if="loading"
-                            class="d-flex flex-grow-1 flex-column w-100 justify-content-center align-items-center"
-                            :height="60"
-                            :fontSize="1"
-                            loadingMessage="Courses"
-                            :topSpacing="0"
-                          />
-                          <CourseList
-                            v-if="!loading"
-                            @addCourse="addCourse"
-                            @removeCourse="removeCourse"
-                            @showCourseInfo="showCourseInfo"
-                            class="w-100"
-                          />
-                        </b-card-text>
-                      </b-tab>
-                      <b-tab class="flex-grow-1" data-cy="selected-courses-tab">
-                        <template v-slot:title>
-                          <div
-                            class="text-center"
-                            data-cy="selected-courses-tab-header"
-                          >
-                            Selected Courses
-                            <b-badge
-                              variant="light"
-                              data-cy="num-selected-courses"
-                            >
-                              {{ numSelectedCourses }}
-                            </b-badge>
-                          </div>
-                        </template>
-                        <b-card-text
-                          class="w-100 d-flex flex-grow-1 flex-column"
-                        >
-                          <SelectedCourses
-                            :courses="selectedCourses"
-                            @removeCourse="removeCourse"
-                            @removeCourseSection="removeCourseSection"
-                            @addCourseSection="addCourseSection"
-                          />
-                        </b-card-text>
-                      </b-tab>
-                    </b-tabs>
-                  </b-card>
-                </b-col>
-              </div>
-              <slot></slot>
-            </div>
-          </transition>
-        </div>
+        <!-- Schedule component -->
+        <Schedule v-if="loading" />
+        <Schedule v-else :possibility="possibilities[index]"></Schedule>
+
+        <!-- Schedule info -->
+        <b-row class="align-items-center mb-4">
+          <b-col>
+            <h5>CRNs: {{ selectedCrns }}</h5>
+            <h5>Credits: {{ totalCredits }}</h5>
+          </b-col>
+          <b-col class="d-flex flex-column align-items-end">
+            <b-form-checkbox
+              class="mt-2"
+              size="sm"
+              :checked="$store.state.colorBlindAssist"
+              @change="toggleColors()"
+              switch
+            >
+              Color Blind Assistance
+            </b-form-checkbox>
+            <b-dropdown text="Export Data" class="mt-2" right>
+              <b-dropdown-item @click="exportScheduleToIcs">
+                <font-awesome-icon :icon="exportIcon" />
+                Export To ICS
+              </b-dropdown-item>
+              <b-dropdown-item @click="exportScheduleToImage">
+                <font-awesome-icon :icon="exportIcon" />
+                Export To Image
+              </b-dropdown-item>
+            </b-dropdown>
+          </b-col>
+        </b-row>
+      </div>
+>>>>>>> Stashed changes
+
+      <!-- Course selection section - now below schedule -->
+      <div class="col-12 course-selection-section">
+        <b-card no-body>
+          <b-tabs card>
+            <b-tab title="Course Search" active data-cy="course-search-tab">
+              <b-card-text>
+                <CenterSpinner
+                  v-if="loading"
+                  class="d-flex flex-grow-1 flex-column w-100 justify-content-center align-items-center"
+                  :height="60"
+                  :fontSize="1"
+                  loadingMessage="Courses"
+                  :topSpacing="0"
+                />
+                <CourseList
+                  v-if="!loading"
+                  @addCourse="addCourse"
+                  @removeCourse="removeCourse"
+                  @showCourseInfo="showCourseInfo"
+                  class="w-100"
+                />
+              </b-card-text>
+            </b-tab>
+            <b-tab data-cy="selected-courses-tab">
+              <template v-slot:title>
+                <div class="text-center" data-cy="selected-courses-tab-header">
+                  Selected Courses
+                  <b-badge variant="light" data-cy="num-selected-courses">
+                    {{ numSelectedCourses }}
+                  </b-badge>
+                </div>
+              </template>
+              <b-card-text class="w-100">
+                <SelectedCourses
+                  :courses="selectedCourses"
+                  @removeCourse="removeCourse"
+                  @showCourseInfo="showCourseInfo"
+                />
+              </b-card-text>
+            </b-tab>
+          </b-tabs>
+        </b-card>
       </div>
     </b-row>
+<<<<<<< Updated upstream
 
     <b-modal
       id="courseInfoModal"
@@ -285,6 +282,8 @@
         Close
       </b-button>
     </b-modal>
+=======
+>>>>>>> Stashed changes
   </b-container>
 </template>
 
@@ -750,23 +749,9 @@ export default {
 </script>
 
 <style lang="scss">
-// NOTE!
-// for every v-tab a div.tab-content container is generated
-// I can't find access to the div so the workaround is to
-// apply the css attributes globally to .tab-content
-// This means that all v-tabs in this app will have flexbox content
-// Hopefully this doesn't screw up someone's debugging later lol
-
-.d-flex flex-column {
-  transition: 0.5s;
-  background-color: #111;
-}
-
-.sidebar {
-  padding: 8px 8px 8px 32px;
-  text-decoration: none;
-  display: block;
-  transition: 0.3s;
+.course-selection-section {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
 }
 
 .tab-content {
@@ -774,12 +759,12 @@ export default {
   flex-grow: 1;
   font-size: 15px;
 }
-// This makes it so active tabs are display:flex
-// The default is display:block
+
 .tab-content > .active {
   display: flex;
 }
 
+<<<<<<< Updated upstream
 // This is for the button for navigating each schedule option
 .schedule-navigation {
   margin: 8px;
@@ -963,25 +948,46 @@ button:focus {
 }
 
 .mobile-schedule-navigation {
+=======
+// Remove sidebar-related styles since we're not using them anymore
+.sidebar-panel,
+.sidebar-backdrop,
+.sidebar {
+>>>>>>> Stashed changes
   display: none;
-  height: 0;
-  overflow: hidden;
 }
 
+<<<<<<< Updated upstream
 @media (min-width: 1025px) {
   .main-body {
     min-height: 100vh;
   }
 }
 
+=======
+// Remove burger menu styles since we don't need them anymore
+#burger {
+  display: none;
+}
+
+// Adjust main content styles
+.main-body {
+  .header-controls {
+    position: relative;
+    z-index: 1000;
+    background-color: inherit;
+  }
+}
+
+// Mobile adjustments
+>>>>>>> Stashed changes
 @media (max-width: 768px) {
-  // basically mobile view showing sidebar at bottom instead so its no longer a sidebar
   .main-body {
     display: block;
-    flex-direction: column;
   }
 
   h5 {
+<<<<<<< Updated upstream
     font-size: .9em;
   }
 
@@ -1011,7 +1017,9 @@ button:focus {
   .mobile-schedule-navigation {
     display: flex;
     height: auto;
+=======
+    font-size: 0.9em;
+>>>>>>> Stashed changes
   }
 }
-
 </style>
